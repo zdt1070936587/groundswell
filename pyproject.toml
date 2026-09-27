@@ -1,0 +1,67 @@
+[project]
+name = "groundswell"
+version = "0.1.0"
+description = "观潮 Groundswell：多区域舆情 → 话题 → 商机 引擎"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+dependencies = [
+  "sqlalchemy>=2.0.30",
+  "alembic>=1.13",
+  "psycopg[binary]>=3.1.19",
+  "pgvector>=0.3.2",
+  "pydantic>=2.7",
+  "pydantic-settings>=2.3",
+  "typer>=0.12",
+  "httpx>=0.27",
+  "loguru>=0.7",
+  "apscheduler>=3.10,<4",
+  "pyyaml>=6.0",
+  "feedparser>=6.0.11",
+  "numpy>=1.26",
+  "jieba>=0.42.1",
+  "fastapi>=0.111",
+  "uvicorn>=0.30",
+  "tzdata>=2024.1",
+]
+
+[project.optional-dependencies]
+llm = ["litellm>=1.40"]
+nlp = ["scikit-learn>=1.4"]
+thai = ["pythainlp>=5.0"]
+local-embed = ["sentence-transformers>=3.0"]
+trends = ["pytrends>=4.9"]
+dashboard = ["streamlit>=1.36", "pandas>=2.2", "plotly>=5.22"]
+ml = ["lightgbm>=4.3", "scikit-learn>=1.4"]
+queue = ["redis>=5.0"]
+
+[dependency-groups]
+dev = ["ruff>=0.5", "pytest>=8.2", "pre-commit>=3.7"]
+
+[project.scripts]
+gs = "groundswell.cli:app"
+groundswell = "groundswell.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/groundswell"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/groundswell/db/migrations/versions/*.py" = ["E", "F401", "I", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["db: requires a running PostgreSQL (set GS_TEST_DATABASE_URL)"]
+filterwarnings = ["ignore::DeprecationWarning"]

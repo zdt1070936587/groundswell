@@ -1,0 +1,79 @@
+# 慢变量：热榜看不到、但决定十年机会的结构性趋势。
+# 每个话题会与这里的关键词做匹配，命中的慢变量写入 topics.slow_variables，
+# 并在商机分析中作为“是否顺着慢变量”的判断依据。
+
+variables:
+  - id: aging
+    name: 老龄化 / 银发经济
+    description: 60 岁以上人口占比持续上升，照护、健康、适老化、老年社交与消费需求增长
+    keywords: [老龄化, 养老, 银发, 老年人, 适老, 护工, 退休, aging, elderly, senior, retirement, caregiver, dementia]
+
+  - id: solo_living
+    name: 单身经济 / 一人户
+    description: 独居人口增长，小份量、陪伴、安全、社交需求
+    keywords: [单身, 独居, 一人食, 一个人, 孤独, living alone, single-person, loneliness, solo]
+
+  - id: pet_economy
+    name: 宠物经济
+    description: 宠物拟人化，医疗、保险、食品、智能硬件持续增长
+    keywords: [宠物, 猫, 狗, 铲屎, 猫粮, 宠物医院, pet, cat, dog, veterinary]
+
+  - id: ai_cost_curve
+    name: AI 推理成本下降
+    description: 单位 token 成本每年下降一个数量级，过去不经济的 AI 应用变得可行
+    keywords: [大模型, ai, llm, gpt, 智能体, agent, 推理, inference, token, claude, deepseek, qwen, 降价]
+
+  - id: energy_transition
+    name: 能源转型
+    description: 新能源车、光伏、储能渗透率提升，带动充电、运维、回收等配套
+    keywords: [新能源, 电动车, 充电桩, 光伏, 储能, 电池, ev, electric vehicle, solar, battery, charging]
+
+  - id: remote_work
+    name: 远程与灵活就业
+    description: 远程办公、自由职业、数字游民规模扩大
+    keywords: [远程办公, 自由职业, 灵活就业, 数字游民, 副业, remote work, freelance, digital nomad, gig]
+
+  - id: globalization_supply
+    name: 中国供应链出海
+    description: 跨境电商、品牌出海、海外本地化服务需求
+    keywords: [出海, 跨境, temu, shein, tiktok shop, 亚马逊, 独立站, cross-border, dropshipping]
+
+  - id: mental_health
+    name: 心理健康
+    description: 焦虑、抑郁、睡眠问题受关注，心理咨询、冥想、陪伴类产品需求上升
+    keywords: [焦虑, 抑郁, 心理, 失眠, 情绪, 冥想, anxiety, depression, mental health, therapy, burnout, insomnia]
+
+  - id: weight_health
+    name: 健康减重（GLP-1）
+    description: GLP-1 类药物普及带动营养、健身、医疗服务重构
+    keywords: [减肥, 减重, 司美格鲁肽, 替尔泊肽, ozempic, wegovy, mounjaro, glp-1, weight loss]
+
+  - id: low_altitude
+    name: 低空经济
+    description: 无人机物流、eVTOL、低空文旅等政策驱动的新赛道
+    keywords: [低空经济, 无人机, 飞行汽车, evtol, drone delivery]
+
+  - id: embodied_ai
+    name: 机器人 / 具身智能
+    description: 人形机器人与服务机器人成本下降，进入商用
+    keywords: [机器人, 人形机器人, 具身智能, 机械臂, robot, humanoid, robotics]
+
+  - id: privacy_regulation
+    name: 数据合规与隐私监管
+    description: 全球数据与 AI 监管趋严，合规工具与服务需求持续增长
+    keywords: [隐私, 数据合规, 个人信息, gdpr, ai act, privacy, data protection, compliance]
+
+  - id: value_consumption
+    name: 性价比消费 / 下沉市场
+    description: 消费降级与理性消费，平替、折扣、二手、会员店增长
+    keywords: [平替, 性价比, 折扣, 二手, 闲鱼, 拼多多, 会员店, dupe, thrift, discount, secondhand]
+
+  - id: emotional_consumption
+    name: 情绪消费
+    description: 为情绪价值买单：潮玩、谷子、疗愈、陪伴
+    keywords: [情绪价值, 潮玩, 盲盒, 谷子, 疗愈, labubu, 泡泡玛特, blind box, collectible]
+
+  - id: low_birth_rate
+    name: 少子化 / 教育变迁
+    description: 出生率下降带来教育、母婴行业结构调整，以及成人教育、终身学习机会
+    keywords: [出生率, 少子化, 生育, 母婴, 幼儿园, 成人教育, 终身学习, birth rate, fertility, lifelong learning]

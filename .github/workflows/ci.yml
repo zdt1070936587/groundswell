@@ -1,0 +1,63 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: timescale/timescaledb-ha:pg16
+        env:
+          POSTGRES_USER: groundswell
+          POSTGRES_PASSWORD: groundswell
+          POSTGRES_DB: groundswell
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U groundswell -d groundswell"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      GS_DATABASE_URL: postgresql+psycopg://groundswell:groundswell@127.0.0.1:5432/groundswell
+      GS_TEST_DATABASE_URL: postgresql+psycopg://groundswell:groundswell@127.0.0.1:5432/groundswell
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv python install 3.11
+      - run: uv sync --frozen --extra nlp
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Config check
+        run: uv run gs config check
+      - name: Migrate and alembic check
+        run: |
+          uv run gs db upgrade
+          uv run gs db check
+      - name: Tests
+        run: uv run pytest -q
+      - name: Downgrade round-trip
+        run: |
+          uv run gs db downgrade base
+          uv run gs db upgrade
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build

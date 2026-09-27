@@ -1,0 +1,179 @@
+# 方法论库：把“成功人士的方法论”翻译成可以依据证据回答的判断问题。
+# - question：注入 LLM 深度分析 prompt，模型必须引用证据回答，无证据则不打该标签
+# - signals：启发式模式（未配置 LLM）下的关键词信号，命中即给出候选标签
+# - weight：标签对总分的加权
+# 修改后请递增 version，历史商机记录保留旧版本号，可用 gs backtest 对比不同版本。
+
+version: "2026.09-v1"
+
+principles:
+  - id: pg_make_something_people_want
+    person: Paul Graham
+    principle: Make something people want
+    question: 是否有人明确在寻找某个东西却找不到（求推荐、求工具、问有没有）？
+    tag: unmet_demand
+    weight: 1.5
+    signals: [有没有, 求推荐, 求一个, 找不到, 为什么没有, is there a, looking for, anyone know, i wish, somebody make, need a tool, recommend a]
+
+  - id: pg_schlep_blindness
+    person: Paul Graham
+    principle: Schlep blindness
+    question: 是否因为流程繁琐、脏活累活、合规麻烦而导致没人愿意做？
+    tag: schlep
+    weight: 1.2
+    signals: [太麻烦, 繁琐, 手工, 人工录入, 对账, 报销, 合规, tedious, manual, paperwork, compliance, spreadsheet hell]
+
+  - id: pg_live_in_future
+    person: Paul Graham
+    principle: Live in the future, then build what's missing
+    question: 早期采用者（开发者、极客）已经在用什么新东西？他们缺什么配套？
+    tag: early_adopter_gap
+    weight: 1.0
+    signals: [show hn, 刚发布, beta, early access, 内测, 尝鲜, 开源了]
+
+  - id: thiel_secret
+    person: Peter Thiel
+    principle: 秘密：大多数人不认同、但证据支持的判断
+    question: 有没有与主流看法相反、但数据/证据支持的判断？
+    tag: contrarian_secret
+    weight: 1.0
+    signals: [被低估, 没人注意, underrated, nobody talks about, contrarian]
+
+  - id: thiel_monopoly
+    person: Peter Thiel
+    principle: 垄断而非竞争：从能做到第一的细分市场切入
+    question: 能否在一个足够小的细分市场做到第一，再逐步扩张？
+    tag: niche_monopoly
+    weight: 1.0
+    signals: [细分, 垂直, 小众, niche, vertical, for dentists, for lawyers, 专门给]
+
+  - id: dixon_toy
+    person: Chris Dixon
+    principle: The next big thing will start out looking like a toy
+    question: 当前被嘲笑“没用/玩具”的东西，使用量是否在持续增长？
+    tag: looks_like_toy
+    weight: 0.8
+    signals: [玩具, 没用, 智商税, toy, gimmick, useless but]
+
+  - id: christensen_jtbd
+    person: Clayton Christensen
+    principle: Jobs to be done
+    question: 用户真正要完成的任务是什么？现有方案在哪个环节让他们不满？
+    tag: jtbd
+    weight: 1.0
+    signals: [怎么才能, 怎么弄, 如何快速, how do i, how to quickly, workflow, 工作流]
+
+  - id: christensen_disruption
+    person: Clayton Christensen
+    principle: 颠覆式创新：低端切入、过度服务的市场
+    question: 现有产品是否对大部分用户过度服务、过贵？能否用更便宜/更简单的方案低端切入？
+    tag: low_end_disruption
+    weight: 1.2
+    signals: [太贵, 平替, 便宜的替代, 性价比, too expensive, cheaper alternative, overpriced, alternative to, 替代品]
+
+  - id: isenberg_community
+    person: Greg Isenberg
+    principle: Community-first：先有社区，再有产品
+    question: 是否已经存在自发讨论这个问题的活跃社区（subreddit、小组、群）？
+    tag: community_first
+    weight: 1.0
+    signals: [社群, 小组, 群里, community, subreddit, discord, 圈子]
+
+  - id: levels_trends
+    person: Pieter Levels
+    principle: 12 startups / 用趋势验证 / build in public
+    question: 长期趋势是否向上？一个人能否在 1 个月内做出可用的 MVP？
+    tag: solo_mvp
+    weight: 1.0
+    signals: [indie, 独立开发, side project, 副业, weekend project, mvp, 一个人]
+
+  - id: why_now
+    person: a16z / Sam Altman
+    principle: Why now：技术、政策、行为的变化让它现在才可行
+    question: 是什么具体变化（新技术、新政策、新行为、新平台）让这件事现在才可行？
+    tag: why_now
+    weight: 1.3
+    signals: [新规, 新政, 发布, 上线, 开放, 降价, new api, launched, now available, regulation, 政策, api]
+
+  - id: picks_and_shovels
+    person: 淘金热经验
+    principle: 淘金热里卖铲子
+    question: 热点本身难以直接参与时，能否给参与者提供工具、教程、数据或服务？
+    tag: picks_and_shovels
+    weight: 1.2
+    signals: [教程, 模板, 提示词, 工具包, 课程, 入门, tutorial, template, prompt, toolkit, course, guide]
+
+  - id: unbundling
+    person: Andrew Parker 等
+    principle: Unbundling：拆解大平台里被忽视的单一功能
+    question: 大平台的哪个功能被用户频繁抱怨、但平台本身不重视？
+    tag: unbundling
+    weight: 1.0
+    signals: [难用, 吐槽, 反人类, 被砍, 下架, sucks, removed feature, killed, hate the new]
+
+  - id: leijun_momentum
+    person: 雷军
+    principle: 顺势而为，站在风口上
+    question: 是否处于新平台/新渠道的早期流量红利期？
+    tag: platform_dividend
+    weight: 1.0
+    signals: [红利, 风口, 新平台, 起量, 爆发, boom, gold rush, early days]
+
+  - id: wangxing_grid
+    person: 王兴
+    principle: 四纵三横：新技术横轴 × 资讯/交流/娱乐/商务纵轴
+    question: 新技术与哪个传统场景（资讯、交流、娱乐、商务）的交叉点还空着？
+    tag: tech_x_scenario
+    weight: 0.8
+    signals: [ai+, ai 加, 结合, 赋能, powered by, meets]
+
+  - id: zhangyiming_distribution
+    person: 张一鸣
+    principle: 延迟满足 / 可规模化的分发
+    question: 是否有可规模化、非人肉的分发路径（SEO、算法推荐、应用商店、病毒传播）？
+    tag: scalable_distribution
+    weight: 1.0
+    signals: [seo, 搜索量, 病毒式, viral, 裂变, 自然流量, organic]
+
+  - id: liangning_pain
+    person: 梁宁
+    principle: 痛点、痒点、爽点
+    question: 这是止痛药（必须解决）还是维生素（有了更好）？用户是否已经在为临时方案付钱？
+    tag: painkiller
+    weight: 1.4
+    signals: [崩溃, 痛苦, 受不了, 焦虑, 付费, 愿意花钱, would pay, i'd pay, frustrated, nightmare, pain]
+
+  - id: arbitrage_copy
+    person: 生财有术 / 出海圈
+    principle: 信息差与时间差：海外已验证国内空白，或国内已验证海外空白
+    question: 这个模式是否已在其他区域验证成功，而目标区域仍然空白？空白是因为没人做还是有结构性障碍？
+    tag: cross_region_arbitrage
+    weight: 1.3
+    region_specific: true
+    signals: [海外, 出海, 国外已经, 国内还没有, in china, 本地化, localization]
+
+  - id: supply_chain_edge
+    person: 出海圈
+    principle: 供应链优势：中国供给 × 目标区域需求
+    question: 目标区域的需求是否可以由中国供应链以显著成本优势满足？
+    tag: supply_chain_edge
+    weight: 1.1
+    region_specific: true
+    signals: ["1688", 义乌, 深圳, 工厂, 供应链, made in china, aliexpress, temu, shein]
+
+  - id: policy_diffusion
+    person: 政策研究
+    principle: 政策扩散：某区域新规先出，其他区域大概率跟进
+    question: 是否有区域已出台新规，而目标区域可能跟进，由此产生合规/工具需求？
+    tag: policy_diffusion
+    weight: 1.0
+    region_specific: true
+    signals: [ai act, gdpr, 法案, 新规, 监管, 合规, regulation, compliance, ban]
+
+  - id: duan_circle
+    person: 段永平
+    principle: 本分，不做不懂的
+    question: 团队是否比目标用户更懂这个问题？如果不懂，学习成本有多高？
+    tag: circle_of_competence
+    weight: 0.6
+    signals: []

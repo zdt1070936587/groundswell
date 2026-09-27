@@ -1,0 +1,102 @@
+name: groundswell
+
+x-app: &app
+  build: .
+  image: groundswell-app:latest
+  env_file: .env
+  environment:
+    GS_DATABASE_URL: postgresql+psycopg://groundswell:${POSTGRES_PASSWORD:-groundswell}@db:5432/groundswell
+    GS_RSSHUB_URL: http://rsshub:1200
+    GS_DAILYHOT_URL: http://dailyhot:6688
+    GS_DATA_DIR: /app/data
+    GS_REPORTS_DIR: /app/reports
+  volumes:
+    - ./configs:/app/configs:ro
+    - app-data:/app/data
+    - ./reports:/app/reports
+  depends_on:
+    db:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  db:
+    image: timescale/timescaledb-ha:pg16
+    environment:
+      POSTGRES_USER: groundswell
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-groundswell}
+      POSTGRES_DB: groundswell
+    ports:
+      - "127.0.0.1:${GS_DB_HOST_PORT:-5432}:5432"
+    volumes:
+      - db-data:/home/postgres/pgdata/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U groundswell -d groundswell"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  rsshub:
+    image: diygod/rsshub:latest
+    environment:
+      NODE_ENV: production
+      CACHE_TYPE: memory
+      CACHE_EXPIRE: 600
+    ports:
+      - "127.0.0.1:1200:1200"
+    restart: unless-stopped
+
+  # 补 RSSHub 未覆盖的国内热榜（抖音、头条、快手等）
+  dailyhot:
+    image: imsyy/dailyhot-api:latest
+    ports:
+      - "127.0.0.1:6688:6688"
+    restart: unless-stopped
+
+  app:
+    <<: *app
+    command: ["gs", "serve"]
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  dashboard:
+    <<: *app
+    command: ["streamlit", "run", "src/groundswell/dashboard/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    ports:
+      - "127.0.0.1:8501:8501"
+    profiles: ["dashboard"]
+
+  web:
+    build: ./web
+    environment:
+      GS_API_BASE: http://app:8000
+      GS_API_TOKEN: ${GS_API_TOKEN:-}
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - app
+    restart: unless-stopped
+    profiles: ["web"]
+
+  # Phase 5：采集任务走 Redis 队列，worker 可水平扩展（docker compose --profile scale up -d --scale worker=3）
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    profiles: ["scale"]
+
+  worker:
+    <<: *app
+    command: ["gs", "worker"]
+    environment:
+      GS_DATABASE_URL: postgresql+psycopg://groundswell:${POSTGRES_PASSWORD:-groundswell}@db:5432/groundswell
+      GS_RSSHUB_URL: http://rsshub:1200
+      GS_DAILYHOT_URL: http://dailyhot:6688
+      GS_REDIS_URL: redis://redis:6379/0
+      GS_DATA_DIR: /app/data
+      GS_REPORTS_DIR: /app/reports
+    profiles: ["scale"]
+
+volumes:
+  db-data:
+  app-data:

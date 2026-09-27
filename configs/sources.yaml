@@ -1,0 +1,316 @@
+# 数据源实例。kind 对应 src/groundswell/collectors 下注册的采集器。
+# region/country/language 为源级默认值；channels 为子频道（subreddit、geo、国家榜）→ 国家/区域映射。
+# category_hint 作为话题分类的先验（policy / tech / consumer ...）。
+# 注意：Reddit、Google Trends 在中国大陆需要配置 GS_HTTP_PROXY。
+
+sources:
+  # ------------------------------------------------------------ 全球 / 技术先行指标
+  - id: hackernews
+    kind: hackernews
+    name: Hacker News
+    region: GLOBAL
+    language: en
+    interval_minutes: 60
+    category_hint: tech
+    params:
+      tags: [front_page, show_hn, ask_hn]
+      hits_per_page: 50
+      lookback_hours: 24
+      min_points: 10
+
+  - id: github_trending
+    kind: github_trending
+    name: GitHub 新晋热门仓库
+    region: GLOBAL
+    language: en
+    interval_minutes: 180
+    category_hint: tech
+    params:
+      created_within_days: 7
+      min_stars: 50
+      per_page: 50
+      queries: ["topic:llm", "topic:ai-agents"]
+
+  - id: producthunt
+    kind: rss
+    name: Product Hunt
+    region: GLOBAL
+    language: en
+    interval_minutes: 180
+    category_hint: tech
+    params:
+      url: https://www.producthunt.com/feed
+
+  # ------------------------------------------------------------ 大中华区（RSSHub）
+  - id: weibo_hot
+    kind: rsshub
+    name: 微博热搜
+    region: GC
+    country: CN
+    language: zh
+    interval_minutes: 60
+    params: {route: /weibo/search/hot}
+
+  - id: zhihu_hot
+    kind: rsshub
+    name: 知乎热榜
+    region: GC
+    country: CN
+    language: zh
+    interval_minutes: 60
+    params: {route: /zhihu/hot}
+
+  - id: baidu_hot
+    kind: rsshub
+    name: 百度热搜
+    region: GC
+    country: CN
+    language: zh
+    interval_minutes: 60
+    params: {route: /baidu/top}
+
+  - id: bilibili_popular
+    kind: rsshub
+    name: B站综合热门
+    region: GC
+    country: CN
+    language: zh
+    interval_minutes: 120
+    params: {route: /bilibili/popular/all}
+
+  - id: kr36_hot
+    kind: rsshub
+    name: 36氪人气榜
+    region: GC
+    country: CN
+    language: zh
+    interval_minutes: 120
+    category_hint: tech
+    params: {route: /36kr/hot-list}
+
+  - id: v2ex_hot
+    kind: rsshub
+    name: V2EX 最热
+    region: GC
+    country: CN
+    language: zh
+    interval_minutes: 120
+    category_hint: tech
+    params: {route: /v2ex/topics/hot}
+
+  - id: juejin_trending
+    kind: rsshub
+    name: 掘金热门
+    region: GC
+    country: CN
+    language: zh
+    interval_minutes: 240
+    category_hint: tech
+    params: {route: /juejin/trending/all/weekly}
+
+  - id: ithome_ranking
+    kind: rsshub
+    name: IT之家 24 小时热榜
+    region: GC
+    country: CN
+    language: zh
+    interval_minutes: 120
+    category_hint: tech
+    params: {route: /ithome/ranking/24h}
+
+  - id: woshipm_popular
+    kind: rsshub
+    name: 人人都是产品经理热门
+    region: GC
+    country: CN
+    language: zh
+    interval_minutes: 240
+    params: {route: /woshipm/popular}
+
+  - id: gov_policy
+    kind: rsshub
+    name: 中国政府网最新政策
+    region: GC
+    country: CN
+    language: zh
+    interval_minutes: 360
+    category_hint: policy
+    params: {route: /gov/zhengce/zuixin}
+
+  # ------------------------------------------------------------ 大中华区（DailyHotApi）
+  - id: douyin_hot
+    kind: dailyhot
+    name: 抖音热榜
+    region: GC
+    country: CN
+    language: zh
+    interval_minutes: 60
+    params: {route: douyin}
+
+  - id: toutiao_hot
+    kind: dailyhot
+    name: 今日头条热榜
+    region: GC
+    country: CN
+    language: zh
+    interval_minutes: 60
+    params: {route: toutiao}
+
+  - id: kuaishou_hot
+    kind: dailyhot
+    name: 快手热榜
+    region: GC
+    country: CN
+    language: zh
+    interval_minutes: 120
+    params: {route: kuaishou}
+
+  # ------------------------------------------------------------ Reddit：全球板块 + 各国板块
+  - id: reddit
+    kind: reddit
+    name: Reddit
+    region: GLOBAL
+    language: en
+    interval_minutes: 60
+    params: {listing: hot, limit: 50, delay_seconds: 1.0}
+    channels:
+      technology: {}
+      Entrepreneur: {}
+      SaaS: {}
+      smallbusiness: {}
+      startups: {}
+      SideProject: {}
+      SomebodyMakeThis: {}
+      AppIdeas: {}
+      artificial: {}
+      LocalLLaMA: {}
+      # 北美
+      personalfinance: {country: US}
+      Frugal: {country: US}
+      canada: {country: CA}
+      # 东南亚
+      singapore: {country: SG}
+      malaysia: {country: MY}
+      indonesia: {country: ID, language: id}
+      Thailand: {country: TH}
+      VietNam: {country: VN}
+      Philippines: {country: PH}
+      # 拉美
+      brasil: {country: BR, language: pt}
+      mexico: {country: MX, language: es}
+      argentina: {country: AR, language: es}
+      Colombia: {country: CO, language: es}
+      # 欧洲
+      europe: {region: EU}
+      unitedkingdom: {country: GB}
+      de: {country: DE, language: de}
+      france: {country: FR, language: fr}
+      spain: {country: ES, language: es}
+      italy: {country: IT, language: it}
+      Netherlands: {country: NL}
+
+  # ------------------------------------------------------------ Google Trends：逐国日榜
+  - id: google_trends
+    kind: google_trends
+    name: Google Trends 每日趋势
+    region: GLOBAL
+    interval_minutes: 180
+    params: {delay_seconds: 0.5}
+    channels:
+      US: {country: US, language: en}
+      CA: {country: CA, language: en}
+      HK: {country: HK, language: zh}
+      TW: {country: TW, language: zh}
+      SG: {country: SG, language: en}
+      MY: {country: MY}
+      ID: {country: ID, language: id}
+      TH: {country: TH, language: th}
+      VN: {country: VN, language: vi}
+      PH: {country: PH}
+      BR: {country: BR, language: pt}
+      MX: {country: MX, language: es}
+      AR: {country: AR, language: es}
+      CO: {country: CO, language: es}
+      GB: {country: GB, language: en}
+      DE: {country: DE, language: de}
+      FR: {country: FR, language: fr}
+      ES: {country: ES, language: es}
+      IT: {country: IT, language: it}
+
+  # ------------------------------------------------------------ App Store 各国免费榜（通用区域源）
+  - id: appstore_top_free
+    kind: appstore
+    name: App Store 免费榜
+    region: GLOBAL
+    interval_minutes: 360
+    category_hint: consumer
+    params: {chart: top-free, limit: 50}
+    channels:
+      cn: {country: CN}
+      tw: {country: TW}
+      us: {country: US}
+      ca: {country: CA}
+      sg: {country: SG}
+      id: {country: ID}
+      th: {country: TH}
+      vn: {country: VN}
+      ph: {country: PH}
+      br: {country: BR}
+      mx: {country: MX}
+      gb: {country: GB}
+      de: {country: DE}
+      fr: {country: FR}
+
+  # ------------------------------------------------------------ 区域科技媒体（RSS）
+  - id: sifted
+    kind: rss
+    name: Sifted（欧洲创业）
+    region: EU
+    language: en
+    interval_minutes: 360
+    category_hint: tech
+    params: {url: https://sifted.eu/feed}
+
+  - id: tech_eu
+    kind: rss
+    name: Tech.eu
+    region: EU
+    language: en
+    interval_minutes: 360
+    category_hint: tech
+    params: {url: https://tech.eu/feed/}
+
+  - id: e27
+    kind: rss
+    name: e27（东南亚创业）
+    region: SEA
+    language: en
+    interval_minutes: 360
+    category_hint: tech
+    params: {url: https://e27.co/feed/}
+
+  - id: contxto
+    kind: rss
+    name: Contxto（拉美创业）
+    region: LATAM
+    language: en
+    interval_minutes: 360
+    enabled: false
+    category_hint: tech
+    params: {url: https://contxto.com/feed/}
+
+  # ------------------------------------------------------------ 竞品监控（Phase 6）：高赞未实现需求
+  - id: competitor_issues
+    kind: github_issues
+    name: 竞品 GitHub 高赞 issue
+    region: GLOBAL
+    language: en
+    interval_minutes: 1440
+    category_hint: tech
+    params:
+      per_repo: 20
+      repos:
+        - obsidianmd/obsidian-releases
+        - logseq/logseq
+        - n8n-io/n8n
+        - langgenius/dify

@@ -1,0 +1,29 @@
+# 回测黄金集：2023–2025 年已知“起飞”的项目 / 品类 / 话题。
+# breakout 为人工确定的“公认起飞日”（approx=true 表示约数，误差在 ±2 周内）。
+# gs backtest 会检验系统在 breakout 之前多少天首次发出信号，命中率与平均领先天数是核心 KPI。
+# 回测需要覆盖对应时间段的历史数据：先用 gs data import 导入，或等待系统自身积累。
+
+version: "2026.09-v1"
+
+cases:
+  - {name: Temu 美国爆发, keywords: [temu], region: NA, breakout: 2023-02-12, note: 超级碗广告}
+  - {name: 淄博烧烤, keywords: [淄博烧烤, 淄博], region: GC, breakout: 2023-03-15}
+  - {name: 特种兵旅游, keywords: [特种兵旅游, 特种兵式旅游], region: GC, breakout: 2023-04-10}
+  - {name: City Walk, keywords: [citywalk, city walk], region: GC, breakout: 2023-06-20}
+  - {name: Threads 上线, keywords: [threads], region: NA, breakout: 2023-07-06, approx: false}
+  - {name: Stanley 保温杯, keywords: [stanley cup, stanley tumbler, stanley quencher], region: NA, breakout: 2023-12-20}
+  - {name: 幻兽帕鲁, keywords: [palworld, 幻兽帕鲁], region: GLOBAL, breakout: 2024-01-20, approx: false}
+  - {name: OpenAI Sora, keywords: [sora], region: GLOBAL, breakout: 2024-02-15, approx: false}
+  - {name: Apple Vision Pro, keywords: [vision pro], region: NA, breakout: 2024-02-02, approx: false}
+  - {name: Suno AI 音乐, keywords: [suno], region: GLOBAL, breakout: 2024-03-25}
+  - {name: 迪拜巧克力, keywords: [dubai chocolate, 迪拜巧克力], region: EU, breakout: 2024-07-15}
+  - {name: 黑神话悟空, keywords: [黑神话, 悟空, black myth], region: GC, breakout: 2024-08-20, approx: false}
+  - {name: Cursor 编辑器, keywords: [cursor], region: GLOBAL, breakout: 2024-08-25}
+  - {name: DeepSeek R1, keywords: [deepseek], region: GLOBAL, breakout: 2025-01-27, approx: false}
+  - {name: 哪吒之魔童闹海, keywords: [哪吒2, 哪吒之魔童闹海, ne zha 2], region: GC, breakout: 2025-01-31}
+  - {name: Vibe coding, keywords: [vibe coding], region: GLOBAL, breakout: 2025-02-15}
+  - {name: Manus, keywords: [manus], region: GC, breakout: 2025-03-06, approx: false}
+  - {name: 吉卜力风格图片, keywords: [ghibli, 吉卜力], region: GLOBAL, breakout: 2025-03-27, approx: false}
+  - {name: MCP 协议, keywords: [mcp, model context protocol], region: GLOBAL, breakout: 2025-03-15}
+  - {name: Labubu 泰国, keywords: [labubu], region: SEA, breakout: 2024-05-01}
+  - {name: Labubu 北美, keywords: [labubu], region: NA, breakout: 2025-04-20}

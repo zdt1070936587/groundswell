@@ -1,0 +1,86 @@
+# 区域节假日 / 大促 / 赛事日历，用于抑制季节性峰值被误判为趋势。
+# factor：活动期间对“突发/增速”分量的折扣（0.7 = 打七折）；热度分量不打折。
+# 固定日期用 start/end（MM-DD，可跨年）；农历节日、赛事按年份给 dates。
+# 标注“约”的日期为估计值，每年初复核一次。
+
+events:
+  - name: 春节
+    regions: [GC, SEA]
+    factor: 0.6
+    dates:
+      2026: [2026-02-14, 2026-02-24]
+      2027: [2027-02-03, 2027-02-13]
+
+  - name: 国庆黄金周
+    regions: [GC]
+    start: "10-01"
+    end: "10-07"
+
+  - name: 618 大促
+    regions: [GC]
+    start: "06-14"
+    end: "06-19"
+
+  - name: 双十一
+    regions: [GC, SEA]
+    factor: 0.6
+    start: "11-09"
+    end: "11-12"
+
+  - name: 双十二
+    regions: [GC, SEA]
+    start: "12-11"
+    end: "12-13"
+
+  - name: 9.9 大促（Shopee/Lazada）
+    regions: [SEA]
+    start: "09-08"
+    end: "09-10"
+
+  - name: 斋月（约）
+    regions: [SEA]
+    dates:
+      2026: [2026-02-18, 2026-03-20]
+      2027: [2027-02-08, 2027-03-10]
+
+  - name: 泼水节
+    regions: [SEA]
+    start: "04-12"
+    end: "04-16"
+
+  - name: 超级碗
+    regions: [NA]
+    factor: 0.6
+    dates:
+      2026: [2026-02-07, 2026-02-09]
+      2027: [2027-02-13, 2027-02-15]
+
+  - name: 黑五与网络星期一
+    regions: [NA, EU, LATAM]
+    factor: 0.6
+    dates:
+      2026: [2026-11-26, 2026-12-01]
+      2027: [2027-11-25, 2027-11-30]
+
+  - name: Prime Day（约）
+    regions: [NA, EU]
+    dates:
+      2026: [2026-07-07, 2026-07-12]
+      2027: [2027-07-06, 2027-07-11]
+
+  - name: 圣诞与新年
+    regions: [NA, EU, LATAM, GLOBAL]
+    start: "12-20"
+    end: "01-02"
+
+  - name: 巴西狂欢节
+    regions: [LATAM]
+    dates:
+      2026: [2026-02-13, 2026-02-18]
+      2027: [2027-02-05, 2027-02-10]
+
+  - name: 2026 世界杯
+    regions: [GLOBAL, NA, LATAM, EU]
+    factor: 0.6
+    dates:
+      2026: [2026-06-11, 2026-07-19]

@@ -1,0 +1,195 @@
+# 区域 → 国家（ISO 3166-1 alpha-2）→ 语言（BCP 47）映射。
+# 边界问题（新加坡、台港、英国等）集中在这里调整，代码不写死。
+# aliases 用于内容级区域归属：全大写且不超过 3 个字符的别名按大小写敏感匹配。
+# context 注入商机分析 prompt：本地分发渠道、支付方式、监管要点。
+
+regions:
+  GC:
+    name: 大中华区
+    timezone: Asia/Shanghai
+    countries:
+      CN:
+        name: 中国大陆
+        languages: [zh]
+        timezone: Asia/Shanghai
+        aliases: [中国, 国内, 大陆, 内地, 国产, 北京, 上海, 深圳, 杭州, 广州, 成都, 人民币, 微信, 支付宝, 淘宝, 拼多多, 抖音, 小红书, China, Chinese, Beijing, Shanghai, Shenzhen, CNY, RMB]
+      HK:
+        name: 中国香港
+        languages: [zh, en]
+        timezone: Asia/Hong_Kong
+        aliases: [香港, Hong Kong, HKD]
+      MO:
+        name: 中国澳门
+        languages: [zh, pt]
+        timezone: Asia/Macau
+        aliases: [澳门, 澳門, Macau, Macao]
+      TW:
+        name: 中国台湾
+        languages: [zh]
+        timezone: Asia/Taipei
+        aliases: [台湾, 台灣, 台北, Taiwan, Taipei, TWD]
+    context:
+      channels: [小红书, 抖音, 视频号, 微信公众号, B站, 知乎, 淘宝/天猫, 拼多多, 私域社群]
+      payments: [微信支付, 支付宝]
+      regulation: [ICP 备案, 个人信息保护法, 算法备案, 生成式人工智能服务管理暂行办法, 数据出境安全评估]
+      notes: 流量平台化程度高，内容种草 + 私域转化是主流路径；ToB 付费意愿偏低，定制化需求重
+
+  SEA:
+    name: 东南亚
+    timezone: Asia/Singapore
+    countries:
+      SG:
+        name: 新加坡
+        languages: [en, zh, ms]
+        timezone: Asia/Singapore
+        aliases: [Singapore, 新加坡, SGD]
+      MY:
+        name: 马来西亚
+        languages: [ms, en, zh]
+        timezone: Asia/Kuala_Lumpur
+        aliases: [Malaysia, Kuala Lumpur, 马来西亚, 吉隆坡, MYR, Ringgit]
+      ID:
+        name: 印度尼西亚
+        languages: [id]
+        timezone: Asia/Jakarta
+        aliases: [Indonesia, Jakarta, 印尼, 印度尼西亚, 雅加达, Rupiah, IDR]
+      TH:
+        name: 泰国
+        languages: [th]
+        timezone: Asia/Bangkok
+        aliases: [Thailand, Bangkok, 泰国, 曼谷, THB, Baht]
+      VN:
+        name: 越南
+        languages: [vi]
+        timezone: Asia/Ho_Chi_Minh
+        aliases: [Vietnam, Viet Nam, Hanoi, Ho Chi Minh, 越南, 河内, 胡志明, VND]
+      PH:
+        name: 菲律宾
+        languages: [tl, en]
+        timezone: Asia/Manila
+        aliases: [Philippines, Manila, 菲律宾, 马尼拉, PHP, Peso Philippine]
+    context:
+      channels: [TikTok Shop, Shopee 直播, Lazada, Facebook 群组, Instagram, WhatsApp, LINE（泰国）, Zalo（越南）]
+      payments: [货到付款 COD, GrabPay, GCash, OVO/DANA, ShopeePay, 银行转账]
+      regulation: [各国个人数据保护法（PDPA/PDP Law）, 跨境电商税, 印尼电商本地化要求]
+      notes: 语言与国家高度分散，移动优先，社交电商与直播渗透率高，客单价低
+
+  NA:
+    name: 北美
+    timezone: America/New_York
+    countries:
+      US:
+        name: 美国
+        languages: [en, es]
+        timezone: America/New_York
+        aliases: [United States, USA, U.S., America, American, 美国, 纽约, 硅谷, New York, California, Silicon Valley, Texas, USD]
+      CA:
+        name: 加拿大
+        languages: [en, fr]
+        timezone: America/Toronto
+        aliases: [Canada, Canadian, Toronto, Vancouver, 加拿大, 多伦多, 温哥华, CAD]
+    context:
+      channels: [Reddit, SEO/内容营销, Product Hunt, Newsletter, YouTube, TikTok, X, App Store/Google Play, Amazon]
+      payments: [信用卡（Stripe）, Apple Pay, PayPal, 订阅制]
+      regulation: [CCPA/CPRA, COPPA, FTC 广告与订阅规则, 各州 AI 法案]
+      notes: SaaS 与订阅付费意愿最高，竞争最激烈；自助式获客（PLG）与 SEO 是独立开发者主路径
+
+  LATAM:
+    name: 拉美
+    timezone: America/Sao_Paulo
+    countries:
+      BR:
+        name: 巴西
+        languages: [pt]
+        timezone: America/Sao_Paulo
+        aliases: [Brasil, Brazil, São Paulo, Sao Paulo, Rio de Janeiro, 巴西, 圣保罗, BRL, Real]
+      MX:
+        name: 墨西哥
+        languages: [es]
+        timezone: America/Mexico_City
+        aliases: [México, Mexico, Mexican, CDMX, 墨西哥, MXN]
+      AR:
+        name: 阿根廷
+        languages: [es]
+        timezone: America/Argentina/Buenos_Aires
+        aliases: [Argentina, Buenos Aires, 阿根廷, ARS]
+      CO:
+        name: 哥伦比亚
+        languages: [es]
+        timezone: America/Bogota
+        aliases: [Colombia, Bogotá, Bogota, 哥伦比亚, COP]
+      CL:
+        name: 智利
+        languages: [es]
+        timezone: America/Santiago
+        aliases: [Chile, Santiago de Chile, 智利, CLP]
+      PE:
+        name: 秘鲁
+        languages: [es]
+        timezone: America/Lima
+        aliases: [Perú, Peru, Lima, 秘鲁, PEN]
+    context:
+      channels: [WhatsApp, Instagram, TikTok, Mercado Libre, Kwai（巴西）, YouTube, X]
+      payments: [Pix（巴西）, 分期付款 parcelamento, Boleto, OXXO（墨西哥）, Mercado Pago]
+      regulation: [LGPD（巴西）, 各国消费者保护法, 进口关税与清关]
+      notes: 巴西（葡语）与西语国家需分开看；WhatsApp 是事实上的商业基础设施；汇率波动大
+
+  EU:
+    name: 欧洲
+    timezone: Europe/Berlin
+    countries:
+      GB:
+        name: 英国
+        languages: [en]
+        timezone: Europe/London
+        aliases: [United Kingdom, UK, Britain, British, England, London, 英国, 伦敦, GBP]
+      DE:
+        name: 德国
+        languages: [de]
+        timezone: Europe/Berlin
+        aliases: [Germany, Deutschland, German, Berlin, München, Munich, 德国, 柏林]
+      FR:
+        name: 法国
+        languages: [fr]
+        timezone: Europe/Paris
+        aliases: [France, French, Paris, 法国, 巴黎]
+      ES:
+        name: 西班牙
+        languages: [es]
+        timezone: Europe/Madrid
+        aliases: [España, Spain, Spanish, Madrid, Barcelona, 西班牙, 马德里]
+      IT:
+        name: 意大利
+        languages: [it]
+        timezone: Europe/Rome
+        aliases: [Italia, Italy, Italian, Rome, Roma, Milan, Milano, 意大利, 罗马, 米兰]
+      NL:
+        name: 荷兰
+        languages: [nl]
+        timezone: Europe/Amsterdam
+        aliases: [Netherlands, Nederland, Dutch, Amsterdam, 荷兰, 阿姆斯特丹]
+      SE:
+        name: 瑞典
+        languages: [sv]
+        timezone: Europe/Stockholm
+        aliases: [Sweden, Sverige, Swedish, Stockholm, 瑞典]
+      PL:
+        name: 波兰
+        languages: [pl]
+        timezone: Europe/Warsaw
+        aliases: [Poland, Polska, Polish, Warsaw, 波兰, 华沙]
+    context:
+      channels: [各国本地语言 SEO, LinkedIn, Reddit 各国板块, Instagram, Amazon 各国站, 本地媒体]
+      payments: [SEPA, 信用卡, Klarna（先买后付）, iDEAL（荷兰）, PayPal]
+      regulation: [GDPR, EU AI Act, DSA/DMA, 增值税 OSS, 消费者 14 天无理由退货]
+      notes: 按国家分语言本地化；合规成本高但一旦做成客户黏性强；B2B 采购周期长
+
+  GLOBAL:
+    name: 全球/无法归属
+    timezone: UTC
+    countries: {}
+    context:
+      channels: [Hacker News, GitHub, Product Hunt, X, Reddit, YouTube]
+      payments: [Stripe, Paddle, Lemon Squeezy]
+      regulation: []
+      notes: 全球性话题（开源、基础技术）在此层观察，再下钻各区域

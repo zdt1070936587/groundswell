@@ -2,11 +2,23 @@
 
 from __future__ import annotations
 
+import re
+
 from groundswell.collectors.base import Collector, CollectorError, Item, parse_iso, strip_html
 from groundswell.collectors.github_trending import github_headers
 from groundswell.collectors.registry import register
 
 API = "https://api.github.com/search/issues"
+
+# issue 模板里的标题、勾选框、注释是所有 issue 共有的噪声
+_TEMPLATE_LINE = re.compile(r"^\s*(#{1,6}\s|[-*]\s*\[[ xX]\]|<!--|-->|>\s*\[!|\|)")
+
+
+def clean_issue_body(body: str | None, limit: int = 1000) -> str | None:
+    if not body:
+        return None
+    lines = [ln for ln in body.splitlines() if ln.strip() and not _TEMPLATE_LINE.match(ln)]
+    return strip_html("\n".join(lines), limit=limit) or None
 
 
 @register("github_issues")
@@ -42,9 +54,10 @@ class GitHubIssuesCollector(Collector):
                 items.append(
                     Item(
                         external_id=issue["html_url"],
-                        title=f"[{repo}] {issue['title']}"[:500],
+                        # 仓库名放在 channel，不进标题，避免同仓库无关 issue 因前缀相同被聚到一起
+                        title=str(issue["title"])[:500],
                         url=issue["html_url"],
-                        text=strip_html(issue.get("body"), limit=1000),
+                        text=clean_issue_body(issue.get("body")),
                         author=(issue.get("user") or {}).get("login"),
                         published_at=parse_iso(issue.get("created_at")),
                         metrics={

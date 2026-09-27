@@ -109,10 +109,17 @@ def strip_html(value: str | None, limit: int = MAX_TEXT) -> str | None:
     return text[:limit] or None
 
 
-def from_epoch(value: float | int | None) -> datetime | None:
-    if value is None:
+def from_epoch(value: float | int | str | None) -> datetime | None:
+    """秒或毫秒时间戳 → UTC datetime；非法值返回 None（Windows 上越界会抛 OSError）。"""
+    if value is None or value == "":
         return None
-    return datetime.fromtimestamp(float(value), tz=UTC)
+    try:
+        ts = float(value)
+        if ts > 1e11:
+            ts /= 1000
+        return datetime.fromtimestamp(ts, tz=UTC)
+    except (TypeError, ValueError, OverflowError, OSError):
+        return None
 
 
 def from_struct_time(value: Any) -> datetime | None:

@@ -33,11 +33,15 @@ class AppStoreChartsCollector(Collector):
                 items.append(
                     Item(
                         external_id=f"{cc.upper()}:{chart}:{app['id']}",
-                        title=f"{app.get('name')} — {app.get('artistName')}",
+                        title=str(app.get("name") or app["id"]),
                         url=app.get("url"),
-                        text=" / ".join(genres) or None,
                         published_at=parse_iso(app.get("releaseDate")),
-                        metrics={"app_id": app["id"], "chart": chart, "genres": genres},
+                        metrics={
+                            "app_id": app["id"],
+                            "chart": chart,
+                            "genres": genres,
+                            "developer": app.get("artistName"),
+                        },
                         channel=cc,
                         country=cc.upper(),
                         rank=rank,

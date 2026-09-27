@@ -21,9 +21,6 @@ def parse_dailyhot(data: dict, route: str) -> list[Item]:
         title = (row.get("title") or "").strip()
         if not title:
             continue
-        ts = row.get("timestamp")
-        if isinstance(ts, int | float) and ts > 1e12:
-            ts = ts / 1000
         items.append(
             Item(
                 external_id=str(row.get("id") or row.get("url") or title)[:512],
@@ -31,7 +28,7 @@ def parse_dailyhot(data: dict, route: str) -> list[Item]:
                 url=row.get("url") or row.get("mobileUrl"),
                 text=strip_html(row.get("desc")),
                 author=row.get("author"),
-                published_at=from_epoch(ts) if isinstance(ts, int | float) else None,
+                published_at=from_epoch(row.get("timestamp")),
                 metrics={"heat": parse_int(row.get("hot")) or 0},
                 channel=route,
                 rank=rank,

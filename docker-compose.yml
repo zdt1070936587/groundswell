@@ -43,6 +43,8 @@ services:
       NODE_ENV: production
       CACHE_TYPE: memory
       CACHE_EXPIRE: 600
+      # 微博热搜需要登录 Cookie，否则会频繁 503（访客 Cookie 冷却）
+      WEIBO_COOKIES: ${WEIBO_COOKIES:-}
     ports:
       - "127.0.0.1:1200:1200"
     restart: unless-stopped
@@ -56,9 +58,15 @@ services:
 
   app:
     <<: *app
-    command: ["gs", "serve"]
+    command: ["sh", "-c", "gs db upgrade && exec gs serve"]
     ports:
       - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=5)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   dashboard:
     <<: *app

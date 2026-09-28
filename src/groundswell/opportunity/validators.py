@@ -7,6 +7,7 @@
 | appstore    | iTunes Search API              | 同类 App 供给密度（结果数 / 50）           |
 | jobs        | HN “Who is hiring” 月帖        | 近 6 期招聘帖提及数（log1p）               |
 | funding     | HN Algolia（raises / funding） | 近 180 天融资新闻数（log1p）               |
+| policy      | 已采集的政策类源（本库）        | 近一年相关政策文件数（log1p）              |
 
 每个 (话题, 区域, kind) 3 天内只验证一次。单个验证器失败不影响其他验证器。
 """
@@ -211,6 +212,37 @@ def validate_funding(query: str, client: httpx.Client, **_: Any) -> Result:
     }
 
 
+POLICY_DAYS = 365
+
+
+def validate_policy(query: str, **_: Any) -> Result:
+    """已采集的政策文件（sources.yaml 中 category_hint=policy 的源）里近一年提及该话题的数量。"""
+    from groundswell.configs import load_sources
+    from groundswell.processing.terms import matches_any
+
+    source_ids = [s.id for s in load_sources().sources if s.category_hint == "policy"]
+    if not source_ids:
+        return None, {"skipped": "未配置政策类数据源"}
+    with session_scope() as s:
+        rows = s.execute(
+            text(
+                """
+                SELECT title, url, coalesce(text, '') FROM raw_items
+                WHERE source_id = ANY(:src) AND fetched_at >= now() - make_interval(days => :d)
+                  AND (title ILIKE :q OR text ILIKE :q)
+                ORDER BY fetched_at DESC LIMIT 200
+                """
+            ),
+            {"src": source_ids, "d": POLICY_DAYS, "q": f"%{query}%"},
+        ).all()
+    hits = [(title, url) for title, url, body in rows if matches_any(f"{title} {body}", [query])]
+    return round(math.log1p(len(hits)), 3), {
+        "summary": f"近一年相关政策文件 {len(hits)} 份" if hits else "近一年无相关政策文件",
+        "count": len(hits),
+        "examples": [{"title": t, "url": u} for t, u in hits[:5]],
+    }
+
+
 VALIDATORS: dict[str, tuple[Callable[..., Result], bool]] = {
     # kind: (函数, 是否需要英文查询)
     "gtrends_5y": (validate_gtrends, False),
@@ -218,6 +250,7 @@ VALIDATORS: dict[str, tuple[Callable[..., Result], bool]] = {
     "appstore": (validate_appstore, False),
     "jobs": (validate_jobs, True),
     "funding": (validate_funding, True),
+    "policy": (validate_policy, False),
 }
 
 

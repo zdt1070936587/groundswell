@@ -305,6 +305,22 @@ sources:
     category_hint: tech
     params: {url: https://contxto.com/feed/}
 
+  # ------------------------------------------------------------ 竞品监控（Phase 6）：产品更新日志
+  # GitHub Releases 的 Atom 订阅即 changelog；新增竞品只需往 urls 里加一行
+  - id: competitor_changelog
+    kind: rss
+    name: 竞品更新日志
+    region: GLOBAL
+    language: en
+    interval_minutes: 720
+    category_hint: tech
+    params:
+      limit: 10
+      urls:
+        - https://github.com/n8n-io/n8n/releases.atom
+        - https://github.com/langgenius/dify/releases.atom
+        - https://github.com/logseq/logseq/releases.atom
+
   # ------------------------------------------------------------ 竞品监控（Phase 6）：高赞未实现需求
   - id: competitor_issues
     kind: github_issues

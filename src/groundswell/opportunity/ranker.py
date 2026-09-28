@@ -29,7 +29,7 @@ from groundswell.processing.timeutil import now_utc
 MIN_SAMPLES = 20
 LGBM_MIN_SAMPLES = 300
 LABEL_VALUE = {"good": 1.0, "meh": 0.0, "bad": 0.0}
-VALIDATION_KINDS = ("gtrends_5y", "github", "appstore", "jobs", "funding")
+VALIDATION_KINDS = ("gtrends_5y", "github", "appstore", "jobs", "funding", "policy")
 
 FEATURES = (
     ["total_score"]

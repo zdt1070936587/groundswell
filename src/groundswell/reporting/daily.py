@@ -28,6 +28,7 @@ VALIDATION_LABELS = {
     "appstore": "App Store 供给",
     "jobs": "招聘需求",
     "funding": "融资动态",
+    "policy": "政策文件",
 }
 
 

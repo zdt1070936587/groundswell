@@ -36,6 +36,8 @@ from groundswell.opportunity.methodology import (
 from groundswell.opportunity.prompts import (
     DEEP_SYSTEM,
     DEEP_TEMPLATE,
+    GAP_STATES,
+    GAP_TEMPLATE,
     PROMPT_VERSION,
     SCREEN_SYSTEM,
     SCREEN_TEMPLATE,
@@ -273,17 +275,41 @@ def gather_context(session: Session, topic_id: int, region: str) -> Context:
 
 
 def input_hash(
-    topic_id: int, region: str, evidence_ids: list[int], model: str, methodology_version: str
+    topic_id: int,
+    region: str,
+    evidence_ids: list[int],
+    model: str,
+    methodology_version: str,
+    gap_reason: str | None = None,
 ) -> str:
-    raw = json.dumps(
-        [topic_id, region, sorted(evidence_ids), PROMPT_VERSION, methodology_version, model],
-        ensure_ascii=False,
-    )
+    parts: list[Any] = [
+        topic_id,
+        region,
+        sorted(evidence_ids),
+        PROMPT_VERSION,
+        methodology_version,
+        model,
+    ]
+    if gap_reason:
+        parts.append(f"gap:{gap_reason}")
+    raw = json.dumps(parts, ensure_ascii=False)
     return hashlib.sha1(raw.encode()).hexdigest()
 
 
+def broke_out_regions(c: Candidate) -> list[str]:
+    return [
+        str(p["region"])
+        for p in (c.spread_path or [])
+        if p.get("first_breakout") and p.get("region") != c.region
+    ]
+
+
 def build_deep_prompt(
-    c: Candidate, ctx: Context, regions: RegionsFile, principles: list[Principle]
+    c: Candidate,
+    ctx: Context,
+    regions: RegionsFile,
+    principles: list[Principle],
+    gap_reason: str | None = None,
 ) -> str:
     cfg = regions.regions.get(c.region)
     rc = cfg.context if cfg else None
@@ -305,7 +331,7 @@ def build_deep_prompt(
         f"{s['name']}（{str(s['first_seen'])[:10]}，相似度 {s['similarity']}）" for s in ctx.similar
     )
     spread = " → ".join(str(p.get("region")) for p in (c.spread_path or [])) or "—"
-    return DEEP_TEMPLATE.format(
+    prompt = DEEP_TEMPLATE.format(
         region=c.region,
         region_name=cfg.name if cfg else c.region,
         channels="、".join(rc.channels) if rc and rc.channels else "—",
@@ -327,6 +353,13 @@ def build_deep_prompt(
         principles=principles_text(principles),
         dimensions=dimensions_text(),
     )
+    if gap_reason:
+        prompt += GAP_TEMPLATE.format(
+            broke="、".join(broke_out_regions(c)) or "其他区域",
+            region_name=cfg.name if cfg else c.region,
+            state=GAP_STATES.get(gap_reason, "尚未起飞"),
+        )
+    return prompt
 
 
 _SHAPES = {
@@ -341,7 +374,11 @@ _SHAPES = {
 
 
 def heuristic_analysis(
-    c: Candidate, ctx: Context, regions: RegionsFile, principles: list[Principle]
+    c: Candidate,
+    ctx: Context,
+    regions: RegionsFile,
+    principles: list[Principle],
+    gap_reason: str | None = None,
 ) -> OpportunityAnalysis:
     body = " ".join(
         [c.name, " ".join(c.keywords)] + [f"{e['title']} {e['text']}" for e in ctx.evidence]
@@ -373,21 +410,28 @@ def heuristic_analysis(
         for e in ctx.evidence[:3]
         if e["title"]
     ]
+    summary = f"{region_name}：围绕「{c.name[:40]}」的{CATEGORY_LABELS.get(c.category, '')}类机会（启发式初判，待人工/LLM 复核）"
+    counter = [
+        "启发式分析，未经 LLM 与人工核实",
+        "热度可能只是一次性事件" if not c.slow_variables else "长期趋势明确，可能已有大量竞争者",
+    ]
+    if gap_reason:
+        broke = "、".join(broke_out_regions(c)) or "其他区域"
+        summary = f"{region_name}：「{c.name[:40]}」已在 {broke} 起飞、本区{GAP_STATES.get(gap_reason, '尚未起飞')}，可评估本地化搬运（启发式初判）"
+        why.insert(0, f"已在 {broke} 起飞，{region_name}{GAP_STATES.get(gap_reason, '尚未起飞')}")
+        scores["competition_gap"] = 7.0
+        scores["regional_fit"] = 4.0
+        counter.append("未核实是否存在结构性障碍（监管、支付、渠道、文化）")
     return OpportunityAnalysis(
         is_opportunity=True,
-        summary=f"{region_name}：围绕「{c.name[:40]}」的{CATEGORY_LABELS.get(c.category, '')}类机会（启发式初判，待人工/LLM 复核）",
+        summary=summary,
         scores=scores,
         tags=[p.tag for p in matched][:6],
         principles_applied=[p.id for p in matched][:6],
         why_now="；".join(why),
         distribution_path=("优先渠道：" + "、".join(rc.channels[:4])) if rc and rc.channels else "",
         product_shapes=_SHAPES.get(c.category or "", ["先用内容/社群验证需求"]),
-        counter_arguments=[
-            "启发式分析，未经 LLM 与人工核实",
-            "热度可能只是一次性事件"
-            if not c.slow_variables
-            else "长期趋势明确，可能已有大量竞争者",
-        ],
+        counter_arguments=counter,
         known_players=[],
         durability="structural" if c.slow_variables else "unknown",
         evidence=evidence,
@@ -475,7 +519,9 @@ def analyze(
         ctx = gather_context(s, c.topic_id, c.region)
     evidence_ids = {e["id"] for e in ctx.evidence}
     model = (llm.model_for("strong") or "heuristic") if use_llm else "heuristic"
-    ihash = input_hash(c.topic_id, c.region, list(evidence_ids), model, methodology_version)
+    ihash = input_hash(
+        c.topic_id, c.region, list(evidence_ids), model, methodology_version, gap_reason
+    )
     with session_scope() as s:
         dup = s.execute(
             text(
@@ -488,7 +534,7 @@ def analyze(
     analysis: OpportunityAnalysis | None = None
     status = "heuristic"
     if use_llm:
-        prompt = build_deep_prompt(c, ctx, regions, principles)
+        prompt = build_deep_prompt(c, ctx, regions, principles, gap_reason if is_gap else None)
         try:
             analysis = llm.complete_json(
                 prompt,
@@ -504,9 +550,11 @@ def analyze(
         except llm.LLMError as exc:
             logger.warning(f"深度分析失败 #{c.topic_id}/{c.region}，改用启发式：{exc}")
             model = "heuristic"
-            ihash = input_hash(c.topic_id, c.region, list(evidence_ids), model, methodology_version)
+            ihash = input_hash(
+                c.topic_id, c.region, list(evidence_ids), model, methodology_version, gap_reason
+            )
     if analysis is None:
-        analysis = heuristic_analysis(c, ctx, regions, principles)
+        analysis = heuristic_analysis(c, ctx, regions, principles, gap_reason if is_gap else None)
     with session_scope() as s:
         opp_id, stage = _save(
             s,
@@ -531,7 +579,7 @@ def run_funnel(regions: list[str] | None = None, deep_limit: int | None = None) 
     with session_scope() as s:
         version = sync_methodology(s, methodology)
         used = _deep_used_today(s)
-    codes = [r for r in (regions or settings.report_regions or rfile.codes()) if r in rfile.regions]
+    codes = [r for r in (regions or settings.report_regions or rfile.codes) if r in rfile.regions]
     cap = settings.llm_deep_daily_cap if deep_limit is None else deep_limit
     remaining = max(0, cap - used)
     use_llm = llm.available("strong")

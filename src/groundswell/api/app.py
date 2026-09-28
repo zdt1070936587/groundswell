@@ -161,7 +161,7 @@ def create_app() -> FastAPI:
     @app.get("/api/matrix")
     def matrix(days: int = 7, limit: int = 20, s: Session = Depends(get_session)):
         return queries.region_matrix(
-            s, [r for r in load_regions().codes() if r != "GLOBAL"], days, limit
+            s, [r for r in load_regions().codes if r != "GLOBAL"], days, limit
         )
 
     @app.get("/api/spread")

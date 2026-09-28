@@ -73,6 +73,16 @@ DEEP_TEMPLATE = """# 目标区域
 - evidence: [{{"item_id": 证据中的 id, "kind": "pain|demand|growth|willingness_to_pay|competitor|regulation|other", "quote": "从证据中摘录的原文"}}]，至少 2 条
 """
 
+GAP_STATES = {"absent": "几乎没有讨论", "lagging": "有少量讨论但尚未起飞"}
+
+GAP_TEMPLATE = """
+# 区域空白（本条是跨区信息差分析）
+该话题已在 {broke} 显著起飞，但在 {region_name}{state}。证据主要来自其他区域。
+重点回答：这是“还没人做”（信息差，可搬运 / 本地化），还是“结构性做不了”（监管、支付、渠道、文化、基础设施、需求本身不存在）？
+- 结构性障碍：is_opportunity=false，并在 counter_arguments 写明具体障碍；
+- 信息差：summary 写清要本地化什么，distribution_path 给出 {region_name} 的冷启动渠道，regional_fit 按本地可行性打分。
+"""
+
 
 def dimensions_text() -> str:
     return "；".join(f"{k}={desc}" for k, (desc, _) in DIMENSIONS.items())

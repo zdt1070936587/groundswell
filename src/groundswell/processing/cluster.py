@@ -192,7 +192,9 @@ UPDATE topics t SET
     item_count = agg.n, source_count = agg.ns, first_seen = agg.first_seen, last_seen = agg.last_seen,
     keywords = coalesce(kw.keywords, '{}'),
     active_regions = coalesce(reg.regions, '{}'),
-    origin_region = coalesce(origin.region, 'GLOBAL')
+    origin_region = CASE WHEN jsonb_array_length(coalesce(t.spread_path, '[]'::jsonb)) > 0
+                         THEN t.spread_path->0->>'region'
+                         ELSE coalesce(origin.region, 'GLOBAL') END
 FROM agg LEFT JOIN kw ON kw.topic_id = agg.topic_id LEFT JOIN reg ON reg.topic_id = agg.topic_id
 LEFT JOIN origin ON origin.topic_id = agg.topic_id
 WHERE t.id = agg.topic_id

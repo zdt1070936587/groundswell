@@ -32,7 +32,8 @@ vim .env                     # 填写钉钉 webhook/secret、LLM key、Reddit/Gi
 1. 校验 `.env` 存在且未使用默认密码，权限设为 600；
 2. `docker compose build`，启动基础服务并等待数据库就绪；
 3. `gs db upgrade` + `gs config check`（配置有误会中止部署）；
-4. `docker compose up -d`（`GS_PROFILES="dashboard web"` 可同时启动 Streamlit 与 Next.js）；
+4. `docker compose up -d`（`GS_PROFILES` 选择可选组件：`web` = Next.js 前端，`dashboard` = Streamlit，
+   `scale` = Redis + worker，如 `GS_PROFILES="web scale"`）；
 5. 安装每日 04:30 的 `scripts/backup.sh` cron；
 6. 轮询 `/healthz`，失败时打印应用日志。
 
@@ -55,8 +56,13 @@ dash.example.com {
 }
 ```
 
-API 已有 Bearer token 鉴权（`GS_API_TOKEN`）；Streamlit 自身无鉴权，务必加 basicauth 或只走 SSH 隧道：
-`ssh -L 8501:127.0.0.1:8501 vps`。
+鉴权分三层：
+
+- API：Bearer token（`GS_API_TOKEN`），`/healthz` 除外。
+- Next.js：浏览器只访问同源 `/api/*`，由前端服务端代理附加 token（token 不下发到浏览器）；
+  `.env` 设置 `GS_WEB_USER` / `GS_WEB_PASSWORD` 后整站启用 Basic Auth。对外只暴露前端时，
+  Caddy 可以不单独转发 `/api/*`（前端会代理到 `app:8000`）。
+- Streamlit 自身无鉴权，务必加 basicauth 或只走 SSH 隧道：`ssh -L 8501:127.0.0.1:8501 vps`。
 
 ## 4. 定时任务
 
@@ -67,10 +73,27 @@ API 已有 Bearer token 鉴权（`GS_API_TOKEN`）；Streamlit 自身无鉴权�
 | collect_due | 每 15 分钟 | 采集到期的源（各源 `interval_minutes`） |
 | hourly | 每小时 :07 | 标注 → 关键词统计 → embedding → 归并 → 话题统计 → 订阅匹配 → 源健康告警 |
 | daily | 每天 `GS_REPORT_HOUR`:00 | 命名 → 扩散 → 商机漏斗 → 空白分析 → 验证 → 排序 → 日报推送 |
-| nightly | 每天 03:00 | 近义话题合并、重算话题统计、训练排序模型 |
-| weekly / monthly | 周一 / 每月 1 日 | 周报 / 月报 |
+| nightly | 每天 03:00 | 近义话题合并、重算话题统计、训练排序模型（反馈 ≥ 20 条且正负样本都有时） |
+| weekly | 每周一 `GS_REPORT_HOUR`:30 | 上一个完整 ISO 周的周报 → `reports/weekly/`，并推送 |
+| monthly | 每月 1 日 `GS_REPORT_HOUR`:45 | 上个月的月报 → `reports/monthly/`，并推送 |
 
 同一阶段由 PostgreSQL advisory lock 互斥，手动执行 `gs run hourly` 不会与调度冲突。
+
+### 队列模式（可选）
+
+单进程顺序采集跟不上时（源 > 50 个或单源耗时长），开启 Redis 队列：
+
+```bash
+# .env
+GS_REDIS_URL=redis://redis:6379/0
+# 启动 redis + worker，worker 可扩多份
+GS_PROFILES="web scale" ./scripts/deploy.sh
+docker compose --profile scale up -d --scale worker=3
+```
+
+开启后 `gs serve` 的调度器只负责入队：`collect_due` 按源拆成 `collect:<source_id>` 任务（同名任务去重），
+其余流水线作为单个任务入队，由 worker 执行；流水线之间仍由 advisory lock 互斥。
+未设置 `GS_REDIS_URL` 时调度器在进程内直接执行，行为与之前一致。
 
 ## 5. 备份与恢复
 
@@ -91,7 +114,29 @@ docker compose logs -f --tail 200 app       # 调度日志
 docker compose exec app gs run hourly       # 手动触发
 docker compose exec app gs report daily --push
 docker compose exec db psql -U groundswell  # 直接查库
+docker compose exec app gs report brief 42  # 单商机深度报告 + 一页纸计划
+docker compose exec app gs reviews mine 1232780281 --country us   # App Store 差评挖掘
 ```
+
+报告文件都写在 `reports/`（已挂载到宿主机并纳入备份）：`daily/`、`weekly/`、`monthly/`、`brief/`、`reviews/`、`backtest/`。
+
+## 回测与历史数据
+
+回测检验系统能否在黄金集（`configs/golden_set.yaml`）案例起飞前发出信号，需要案例起飞前约 60 天的历史数据。
+刚部署时库里只有几天的数据，大部分案例会是 `no_data`，属正常现象。两种补数据方式：
+
+```bash
+# 1. 导入外部历史数据（JSONL，每行至少 title 与 published_at；可选 url/text/country/language/metrics/external_id）
+docker compose cp hn-2024.jsonl app:/app/data/     # /app/data 是 app-data 卷
+docker compose exec app gs data import /app/data/hn-2024.jsonl --source hn_archive --region NA
+# 2. 让系统自然积累，一个季度后回测结果才有统计意义
+
+docker compose exec app gs backtest                    # 输出 reports/backtest/*.md，并追加 kpi.jsonl
+docker compose exec app gs data export /app/data/raw.jsonl --days 30   # 导出供离线分析 / 迁移
+```
+
+每次回测会与上一次（同一版黄金集）比较，命中率或平均提前天数下降时报告中标记“回归”；前端“系统健康”页展示 KPI 历史与排序模型状态。
+修改评分、阈值或方法论后，先跑回测再上线。
 
 资源参考（Phase 1–3 实测量级）：每天约 1–3 万条条目、快照 10–30 万行；压缩策略开启后每月增长 < 1 GB。
 

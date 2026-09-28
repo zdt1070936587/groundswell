@@ -193,7 +193,7 @@ def score(
 
 @app.command()
 def validate(days: int = 1, limit: int = 30) -> None:
-    """对最近的商机跑二次验证（Trends 5 年线、GitHub、App Store、招聘、融资）。"""
+    """对最近的商机跑二次验证（Trends 5 年线、GitHub、App Store、招聘、融资、政策文件）。"""
     from groundswell.opportunity.validators import run_validations
 
     typer.echo(json.dumps(run_validations(days=days, limit=limit), ensure_ascii=False, indent=2))

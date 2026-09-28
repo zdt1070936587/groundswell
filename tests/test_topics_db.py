@@ -13,7 +13,7 @@ from groundswell.processing.classify import classify_topics
 from groundswell.processing.cluster import assign_pending, merge_similar_topics, merge_topics
 from groundswell.processing.embed import HashingEmbedding, embed_pending
 from groundswell.processing.naming import name_topics
-from groundswell.processing.timeutil import now_utc
+from groundswell.processing.timeutil import floor_hour, now_utc
 from groundswell.processing.trend import aggregate_hours, score_hours
 
 pytestmark = pytest.mark.db
@@ -26,7 +26,8 @@ B = SourceConfig(id="src_b", kind="rss", name="b", region="NA", country="US", la
 
 def _seed() -> None:
     regions = load_regions()
-    now = now_utc() - timedelta(minutes=30)
+    # 固定落在同一个整点小时内，避免跨小时导致统计被拆分
+    now = floor_hour(now_utc()) - timedelta(hours=1) + timedelta(minutes=10)
     with session_scope() as s:
         sync_sources(s, SourcesFile(sources=[A, B]))
     with session_scope() as s:

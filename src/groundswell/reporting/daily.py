@@ -135,14 +135,21 @@ def section_matrix(session: Session, regions: list[str]) -> str:
         cells = []
         for c in cols:
             z = zs.get(c)
-            cells.append("·" if z is None else (f"**{z:.1f}**" if z >= 2 else f"{z:.1f}"))
+            if c not in zs:
+                cells.append("·")
+            elif z is None:
+                cells.append("○")
+            else:
+                cells.append(f"**{z:.1f}**" if z >= 2 else f"{z:.1f}")
         lines.append(
             f"| {md_escape(r['name'], 30)} | {CATEGORY_LABELS.get(r['category'], '—')} | "
             + " | ".join(cells)
             + " |"
         )
     lines.append("")
-    lines.append("> 粗体 = 该区域已显著起飞（z ≥ 2）；“·” = 该区域尚无讨论，可能是空白。")
+    lines.append(
+        "> 粗体 = 该区域已显著起飞（z ≥ 2）；“○” = 有讨论但历史不足以计算 z；“·” = 该区域尚无讨论，可能是空白。"
+    )
     lines.append("")
     return "\n".join(lines)
 

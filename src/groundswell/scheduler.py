@@ -1,7 +1,8 @@
 """常驻服务：APScheduler（后台线程）+ FastAPI（uvicorn 主线程）。
 
 任务之间用 PostgreSQL advisory lock 互斥，因此即使同时启动了 `gs serve` 和 `gs worker`，
-同一阶段也不会并发执行。配置了 GS_REDIS_URL 时，定时任务只负责投递到队列，由 worker 执行。
+同一阶段也不会并发执行。配置了 GS_REDIS_URL 时，定时任务只负责投递到队列，由 worker 执行；
+到期采集按源拆成 `collect:<source_id>` 任务，多个 worker 并行抓取。
 """
 
 from __future__ import annotations
@@ -37,11 +38,16 @@ def _job_fn(name: str) -> Callable[[], Any]:
 def run_job(name: str) -> Any:
     """执行（或投递）一个任务；异常只记录不抛出，避免杀死调度线程。"""
     settings = get_settings()
-    if settings.redis_url and name != "collect_due":
-        from groundswell.taskqueue import enqueue
+    if settings.redis_url:
+        from groundswell.taskqueue import enqueue, enqueue_due_collections
 
-        enqueue(name)
-        return "enqueued"
+        try:
+            if name == "collect_due":
+                return f"enqueued {enqueue_due_collections()} sources"
+            return "enqueued" if enqueue(name) else "already_queued"
+        except Exception:
+            logger.exception(f"任务 {name} 投递失败")
+            return None
     try:
         result = _job_fn(name)()
         logger.info(f"任务 {name} 完成: {str(result)[:500]}")

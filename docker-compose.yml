@@ -80,6 +80,8 @@ services:
     environment:
       GS_API_BASE: http://app:8000
       GS_API_TOKEN: ${GS_API_TOKEN:-}
+      GS_WEB_USER: ${GS_WEB_USER:-}
+      GS_WEB_PASSWORD: ${GS_WEB_PASSWORD:-}
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:

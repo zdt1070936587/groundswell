@@ -272,6 +272,21 @@ def create_app() -> FastAPI:
     def health_sources(hours: int = 24, s: Session = Depends(get_session)):
         return queries.source_health(s, hours=hours)
 
+    @app.get("/api/kpi")
+    def kpi() -> dict[str, Any]:
+        """回测 KPI 历史（最近 20 次）与排序模型状态。"""
+        import json
+
+        from groundswell.opportunity.ranker import load_model
+
+        path = Path(settings.reports_dir) / "backtest" / "kpi.jsonl"
+        lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+        meta = load_model()
+        return {
+            "backtest": [json.loads(ln) for ln in lines if ln.strip()][-20:],
+            "ranker": {k: v for k, v in meta.items() if k != "model"} if meta else None,
+        }
+
     @app.get("/api/reports")
     def reports(
         kind: str = Query("daily", pattern="^(daily|weekly|monthly|brief|backtest|reviews)$"),
